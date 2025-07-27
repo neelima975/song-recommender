@@ -1,0 +1,625 @@
+{% extends "base.html" %}
+
+{% block title %}SoundWave - Discover Your Next Favorite Song{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative overflow-hidden">
+    <div class="absolute inset-0 gradient-bg opacity-10"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">
+                <span class="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+                    Discover Music
+                </span>
+                <br>
+                <span class="text-white">That Moves You</span>
+            </h1>
+            <p class="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+                Our AI-powered recommendation engine analyzes your taste and finds the perfect songs using 
+                collaborative filtering and content-based algorithms.
+            </p>
+            
+            <!-- Stats -->
+            <div class="flex items-center justify-center space-x-8 mb-12">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-400">{{ stats.total_songs }}</div>
+                    <div class="text-sm text-gray-400">Songs</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-pink-400">{{ stats.total_users }}</div>
+                    <div class="text-sm text-gray-400">Users</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-400">{{ stats.total_ratings }}</div>
+                    <div class="text-sm text-gray-400">Ratings</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-400">{{ stats.avg_rating }}</div>
+                    <div class="text-sm text-gray-400">Avg Rating</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recommendation Controls -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="glass-effect rounded-2xl p-6 mb-8">
+        <h2 class="text-2xl font-bold text-white mb-6 text-center">Get Personalized Recommendations</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <!-- Collaborative Filtering -->
+            <button onclick="SoundWave.getRecommendations('collaborative')" 
+                    class="group relative overflow-hidden bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105">
+                <div class="absolute inset-0 bg-gradient-to-r from-purple-400 to-purple-500 opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                <div class="relative">
+                    <div class="text-lg mb-1">👥 User-Based</div>
+                    <div class="text-sm opacity-90">Based on similar users</div>
+                </div>
+            </button>
+            
+            <!-- Content-Based -->
+            <button onclick="showContentBasedModal()" 
+                    class="group relative overflow-hidden bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105">
+                <div class="absolute inset-0 bg-gradient-to-r from-pink-400 to-pink-500 opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                <div class="relative">
+                    <div class="text-lg mb-1">🎵 Content-Based</div>
+                    <div class="text-sm opacity-90">Based on song features</div>
+                </div>
+            </button>
+            
+            <!-- Hybrid -->
+            <button onclick="SoundWave.getRecommendations('hybrid')" 
+                    class="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105">
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                <div class="relative">
+                    <div class="text-lg mb-1">🔮 Hybrid</div>
+                    <div class="text-sm opacity-90">Best of both worlds</div>
+                </div>
+            </button>
+        </div>
+        
+        <!-- User Selection -->
+        <div class="text-center">
+            <label class="text-sm text-gray-400 block mb-2">Recommendations for:</label>
+            <select id="user-select" onchange="SoundWave.currentUser = this.value" 
+                    class="bg-gray-800 border border-gray-700 text-white px-4 py-2 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                <option value="user_demo">Demo User</option>
+                <option value="user_1">User 1</option>
+                <option value="user_2">User 2</option>
+                <option value="user_3">User 3</option>
+                <option value="user_new">New User</option>
+            </select>
+        </div>
+    </div>
+</section>
+
+<!-- Recommendations Display -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div id="recommendations-container">
+        <div class="text-center py-12">
+            <div class="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mb-6 mx-auto">
+                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-white mb-2">Ready to Discover?</h3>
+            <p class="text-gray-400">Choose a recommendation method above to get started</p>
+        </div>
+    </div>
+</section>
+
+<!-- Popular Songs Section -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="glass-effect rounded-2xl p-6">
+        <h2 class="text-2xl font-bold text-white mb-6">Popular Songs</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {% for song in popular_songs %}
+            <div class="song-card rounded-xl p-4 relative group" 
+                 data-song-id="{{ song.id }}">
+                <div class="flex items-center space-x-3">
+                    <div class="relative">
+                        <img src="{{ song.image }}" alt="{{ song.title }}" 
+                             class="w-12 h-12 rounded-lg object-cover shadow-md"
+                             onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23374151%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23fff%22 font-family=%22Arial%22 font-size=%2212%22>♪</text></svg>'">
+                        <!-- Play Button Overlay -->
+                        <button class="play-button absolute inset-0 bg-black bg-opacity-60 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                data-song-id="{{ song.id }}" 
+                                data-title="{{ song.title }}" 
+                                data-artist="{{ song.artist }}" 
+                                data-image="{{ song.image }}"
+                                onclick="event.stopPropagation();">
+                            <svg class="w-5 h-5 text-white play-icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+                            </svg>
+                            <svg class="w-5 h-5 text-white pause-icon hidden" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="flex-1 min-w-0 cursor-pointer" onclick="SoundWave.getRecommendations('content', {song_id: parseInt(this.closest('.song-card').dataset.songId)})">
+                        <h4 class="font-medium text-white text-sm truncate">{{ song.title }}</h4>
+                        <p class="text-xs text-gray-400 truncate">{{ song.artist }}</p>
+                        <div class="flex items-center justify-between mt-1">
+                            <span class="text-xs text-gray-500">{{ song.genre }}</span>
+                            <span class="text-xs text-purple-400">{{ song.year }}</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Progress bar for currently playing song -->
+                <div class="progress-bar-{{ song.id }} hidden mt-2">
+                    <div class="flex items-center space-x-2 text-xs text-gray-400">
+                        <span class="current-time">0:00</span>
+                        <div class="flex-1 bg-gray-700 rounded-full h-1">
+                            <div class="bg-purple-500 h-1 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <span class="total-time">0:30</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Content-Based Modal -->
+<div id="content-modal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="glass-effect rounded-2xl p-6 w-full max-w-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white">Select a Song for Content-Based Recommendations</h3>
+                <button onclick="hideContentBasedModal()" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Search -->
+            <div class="relative mb-4">
+                <input type="text" id="song-search" placeholder="Search for a song..." 
+                       class="w-full bg-gray-800 border border-gray-700 text-white px-4 py-3 rounded-lg pl-10 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                       oninput="filterSongs(this.value)">
+                <svg class="w-5 h-5 text-gray-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+            
+            <!-- Song List -->
+            <div id="song-list" class="max-h-96 overflow-y-auto space-y-2">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Audio Player (Fixed at bottom) -->
+<div id="audio-player" class="fixed bottom-0 left-0 right-0 glass-effect border-t border-gray-700 z-40 hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div class="flex items-center justify-between">
+            <!-- Song Info -->
+            <div class="flex items-center space-x-3 flex-1 min-w-0">
+                <img id="player-image" src="" alt="" class="w-12 h-12 rounded-lg object-cover">
+                <div class="min-w-0">
+                    <h4 id="player-title" class="font-medium text-white text-sm truncate">Song Title</h4>
+                    <p id="player-artist" class="text-xs text-gray-400 truncate">Artist Name</p>
+                </div>
+            </div>
+            
+            <!-- Controls -->
+            <div class="flex items-center space-x-4">
+                <button id="prev-btn" class="text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"></path>
+                    </svg>
+                </button>
+                
+                <button id="play-pause-btn" class="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-full transition-colors">
+                    <svg class="w-5 h-5 play-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+                    </svg>
+                    <svg class="w-5 h-5 pause-icon hidden" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+                
+                <button id="next-btn" class="text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4.555 5.168A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4A1 1 0 0010 6v2.798L4.555 5.168z"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Progress and Volume -->
+            <div class="flex items-center space-x-3 flex-1 justify-end">
+                <div class="flex items-center space-x-2 text-xs text-gray-400">
+                    <span id="current-time">0:00</span>
+                    <div class="w-32 bg-gray-700 rounded-full h-1 cursor-pointer" id="progress-bar">
+                        <div id="progress-fill" class="bg-purple-500 h-1 rounded-full transition-all duration-100" style="width: 0%"></div>
+                    </div>
+                    <span id="total-time">0:30</span>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.785l-4-3.333H2a1 1 0 01-1-1V7.333a1 1 0 011-1h2.383l4-3.333z" clip-rule="evenodd"></path>
+                        <path d="M14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.983 5.983 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.987 3.987 0 0013 10a3.987 3.987 0 00-1.172-2.828 1 1 0 010-1.415z"></path>
+                    </svg>
+                    <input type="range" id="volume-slider" min="0" max="100" value="50" class="w-16 h-1 bg-gray-700 rounded-full appearance-none cursor-pointer">
+                </div>
+                
+                <button onclick="AudioPlayer.closePlayer()" class="text-gray-400 hover:text-white transition-colors ml-4">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden Audio Element -->
+<audio id="audio-element" preload="none"></audio>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let allSongs = [];
+    
+    // Audio Player functionality
+    window.AudioPlayer = {
+        currentSong: null,
+        audio: null,
+        isPlaying: false,
+        playlist: [],
+        currentIndex: 0,
+        
+        init: function() {
+            this.audio = document.getElementById('audio-element');
+            this.setupEventListeners();
+        },
+        
+        setupEventListeners: function() {
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const progressBar = document.getElementById('progress-bar');
+            const volumeSlider = document.getElementById('volume-slider');
+            
+            playPauseBtn.addEventListener('click', () => this.togglePlayPause());
+            prevBtn.addEventListener('click', () => this.previousSong());
+            nextBtn.addEventListener('click', () => this.nextSong());
+            volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
+            
+            // Progress bar click
+            progressBar.addEventListener('click', (e) => {
+                const rect = progressBar.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                this.seekTo(percent);
+            });
+            
+            // Audio event listeners
+            this.audio.addEventListener('loadedmetadata', () => this.updateDuration());
+            this.audio.addEventListener('timeupdate', () => this.updateProgress());
+            this.audio.addEventListener('ended', () => this.nextSong());
+            this.audio.addEventListener('error', () => this.handleError());
+            
+            // Play button listeners on song cards
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('.play-button')) {
+                    const button = e.target.closest('.play-button');
+                    const songId = parseInt(button.dataset.songId);
+                    const title = button.dataset.title;
+                    const artist = button.dataset.artist;
+                    const image = button.dataset.image;
+                    
+                    this.playSong(songId, title, artist, image);
+                }
+            });
+        },
+        
+        playSong: function(songId, title, artist, image) {
+            // Since we don't have actual audio URLs, we'll simulate with a demo audio
+            // In a real application, you would have actual song URLs
+            const demoAudio = this.generateDemoAudio(songId);
+            
+            this.currentSong = { id: songId, title, artist, image };
+            this.audio.src = demoAudio;
+            
+            // Update player UI
+            document.getElementById('player-title').textContent = title;
+            document.getElementById('player-artist').textContent = artist;
+            document.getElementById('player-image').src = image;
+            
+            // Show player
+            document.getElementById('audio-player').classList.remove('hidden');
+            
+            // Update play buttons
+            this.updatePlayButtons(songId);
+            
+            // Play audio
+            this.audio.play().then(() => {
+                this.isPlaying = true;
+                this.updatePlayPauseIcon();
+            }).catch(error => {
+                console.error('Error playing audio:', error);
+                this.showToast('Unable to play audio. Using demo sound.', 'warning');
+            });
+        },
+        
+        generateDemoAudio: function(songId) {
+            // Generate a simple audio URL for demo purposes
+            // In production, you would use actual song preview URLs from Spotify, Apple Music, etc.
+            const context = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = context.createOscillator();
+            const gainNode = context.createGain();
+            
+            // Create a simple melody based on song ID
+            const frequencies = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+            const baseFreq = frequencies[songId % frequencies.length];
+            
+            // For demo, we'll return a data URL that represents a short beep
+            // In reality, you'd return something like: `https://api.spotify.com/v1/tracks/${songId}/preview`
+            return `data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmITGI/V8smDKAYhdsXr5Z5ODAl4m+Dew2MoCCJ3xfDaj0MGF2O16eSgUAwJetTy0oM2CAl4m9rrpklCCz6T0fLGZysFJIfX8t2NRwgWZLnv554SEA1Ko+PwtmMcBjiS2Vcy8lxwwgUAU7Ux8fHEYgAzEo+j9jy+2FkDT8zXl1CQTwZQmHhGPneFHAhKy/PTbSoUNH7Z8s+JOQQRZ7ro8aVRDQYuqNzr5mNwMpTW8syBKAcgdsfr4JZnUQgJgqTo7a9lEAxNtu3lYnYhMm/C1sWIKwgkdsTy0IQ+gZo0m9Y9kzU2FVzKr+GhUgwKgaTq9LZFBC0WwuP3cKoNBaLS5YlPDgYTdr7t3nAqDC2KjbGcFEQxnJWsYAUIIw0SjB4A=`
+        },
+        
+        togglePlayPause: function() {
+            if (!this.audio.src) return;
+            
+            if (this.isPlaying) {
+                this.audio.pause();
+                this.isPlaying = false;
+            } else {
+                this.audio.play().then(() => {
+                    this.isPlaying = true;
+                }).catch(error => {
+                    console.error('Error playing audio:', error);
+                });
+            }
+            this.updatePlayPauseIcon();
+        },
+        
+        previousSong: function() {
+            // In a real app, you'd have a playlist to navigate
+            this.showToast('Previous song functionality would be implemented with a playlist', 'info');
+        },
+        
+        nextSong: function() {
+            // In a real app, you'd have a playlist to navigate
+            this.showToast('Next song functionality would be implemented with a playlist', 'info');
+        },
+        
+        seekTo: function(percent) {
+            if (this.audio.duration) {
+                this.audio.currentTime = this.audio.duration * percent;
+            }
+        },
+        
+        setVolume: function(value) {
+            this.audio.volume = value / 100;
+        },
+        
+        updateDuration: function() {
+            const duration = this.audio.duration || 30; // Default to 30 seconds for demo
+            document.getElementById('total-time').textContent = this.formatTime(duration);
+        },
+        
+        updateProgress: function() {
+            if (this.audio.duration) {
+                const percent = (this.audio.currentTime / this.audio.duration) * 100;
+                document.getElementById('progress-fill').style.width = percent + '%';
+                document.getElementById('current-time').textContent = this.formatTime(this.audio.currentTime);
+                
+                // Update song card progress if visible
+                if (this.currentSong) {
+                    const progressBar = document.querySelector(`.progress-bar-${this.currentSong.id}`);
+                    if (progressBar && !progressBar.classList.contains('hidden')) {
+                        const cardProgress = progressBar.querySelector('.bg-purple-500');
+                        const currentTime = progressBar.querySelector('.current-time');
+                        if (cardProgress) cardProgress.style.width = percent + '%';
+                        if (currentTime) currentTime.textContent = this.formatTime(this.audio.currentTime);
+                    }
+                }
+            }
+        },
+        
+        updatePlayButtons: function(currentSongId) {
+            // Reset all play buttons
+            document.querySelectorAll('.play-button').forEach(btn => {
+                const playIcon = btn.querySelector('.play-icon');
+                const pauseIcon = btn.querySelector('.pause-icon');
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+            });
+            
+            // Update current song button
+            const currentBtn = document.querySelector(`.play-button[data-song-id="${currentSongId}"]`);
+            if (currentBtn) {
+                const playIcon = currentBtn.querySelector('.play-icon');
+                const pauseIcon = currentBtn.querySelector('.pause-icon');
+                if (this.isPlaying) {
+                    playIcon.classList.add('hidden');
+                    pauseIcon.classList.remove('hidden');
+                } else {
+                    playIcon.classList.remove('hidden');
+                    pauseIcon.classList.add('hidden');
+                }
+            }
+            
+            // Show/hide progress bars
+            document.querySelectorAll('[class*="progress-bar-"]').forEach(bar => {
+                bar.classList.add('hidden');
+            });
+            const currentProgressBar = document.querySelector(`.progress-bar-${currentSongId}`);
+            if (currentProgressBar) {
+                currentProgressBar.classList.remove('hidden');
+            }
+        },
+        
+        updatePlayPauseIcon: function() {
+            const playIcon = document.querySelector('#play-pause-btn .play-icon');
+            const pauseIcon = document.querySelector('#play-pause-btn .pause-icon');
+            
+            if (this.isPlaying) {
+                playIcon.classList.add('hidden');
+                pauseIcon.classList.remove('hidden');
+            } else {
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+            }
+            
+            // Update song card button too
+            if (this.currentSong) {
+                this.updatePlayButtons(this.currentSong.id);
+            }
+        },
+        
+        closePlayer: function() {
+            this.audio.pause();
+            this.audio.src = '';
+            this.isPlaying = false;
+            this.currentSong = null;
+            
+            document.getElementById('audio-player').classList.add('hidden');
+            
+            // Reset all play buttons
+            document.querySelectorAll('.play-button').forEach(btn => {
+                const playIcon = btn.querySelector('.play-icon');
+                const pauseIcon = btn.querySelector('.pause-icon');
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+            });
+            
+            // Hide all progress bars
+            document.querySelectorAll('[class*="progress-bar-"]').forEach(bar => {
+                bar.classList.add('hidden');
+            });
+        },
+        
+        handleError: function() {
+            this.showToast('Audio playback error. This is a demo - real songs would require audio licenses.', 'error');
+        },
+        
+        formatTime: function(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        },
+        
+        showToast: function(message, type = 'info') {
+            // Use the existing toast function from SoundWave
+            if (window.SoundWave && window.SoundWave.showToast) {
+                window.SoundWave.showToast(message, type);
+            }
+        }
+    };
+    
+    // Load all songs on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize audio player
+        AudioPlayer.init();
+        
+        fetch('/api/songs')
+            .then(response => response.json())
+            .then(data => {
+                allSongs = data.songs;
+                populateSongList(allSongs);
+            })
+            .catch(error => console.error('Error loading songs:', error));
+        
+        // Load initial hybrid recommendations
+        setTimeout(() => {
+            SoundWave.getRecommendations('hybrid');
+        }, 1000);
+    });
+    
+    function showContentBasedModal() {
+        document.getElementById('content-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function hideContentBasedModal() {
+        document.getElementById('content-modal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+    
+    function populateSongList(songs) {
+        const songList = document.getElementById('song-list');
+        if (!songList) return;
+        
+        songList.innerHTML = songs.map(song => `
+            <div class="song-card rounded-lg p-3 hover:bg-gray-700/50 group relative" data-song-id="${song.id}">
+                <div class="flex items-center space-x-3">
+                    <div class="relative">
+                        <img src="${song.image}" alt="${song.title}" 
+                             class="w-10 h-10 rounded-lg object-cover"
+                             onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23374151%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23fff%22 font-family=%22Arial%22 font-size=%2212%22>♪</text></svg>'">
+                        <!-- Play Button Overlay -->
+                        <button class="play-button absolute inset-0 bg-black bg-opacity-60 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                data-song-id="${song.id}" 
+                                data-title="${song.title}" 
+                                data-artist="${song.artist}" 
+                                data-image="${song.image}"
+                                onclick="event.stopPropagation();">
+                            <svg class="w-4 h-4 text-white play-icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+                            </svg>
+                            <svg class="w-4 h-4 text-white pause-icon hidden" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="flex-1 cursor-pointer" onclick="selectSongForContentRec(${song.id})">
+                        <h4 class="font-medium text-white text-sm">${song.title}</h4>
+                        <p class="text-xs text-gray-400">${song.artist} • ${song.genre} • ${song.year}</p>
+                    </div>
+                </div>
+                <!-- Progress bar for currently playing song -->
+                <div class="progress-bar-${song.id} hidden mt-2">
+                    <div class="flex items-center space-x-2 text-xs text-gray-400">
+                        <span class="current-time">0:00</span>
+                        <div class="flex-1 bg-gray-700 rounded-full h-1">
+                            <div class="bg-purple-500 h-1 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <span class="total-time">0:30</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function filterSongs(query) {
+        const filtered = allSongs.filter(song => 
+            song.title.toLowerCase().includes(query.toLowerCase()) ||
+            song.artist.toLowerCase().includes(query.toLowerCase()) ||
+            song.genre.toLowerCase().includes(query.toLowerCase())
+        );
+        populateSongList(filtered);
+    }
+    
+    function selectSongForContentRec(songId) {
+        hideContentBasedModal();
+        SoundWave.getRecommendations('content', {song_id: songId});
+        
+        // Clear search
+        document.getElementById('song-search').value = '';
+        populateSongList(allSongs);
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('content-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideContentBasedModal();
+        }
+    });
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            hideContentBasedModal();
+        }
+    });
+</script>
+{% endblock %}
